@@ -79,6 +79,8 @@ public open class HttpClientCall internal constructor(
         return result
     }
 
+    protected open val allowDoubleReceive: Boolean = false
+
     /**
      * Tries to receive the payload of the [response] as a specific expected type provided in [info].
      * Returns [response] if [info] corresponds to [HttpResponse].
@@ -86,10 +88,11 @@ public open class HttpClientCall internal constructor(
      * @throws NoTransformationFoundException If no transformation is found for the type [info].
      * @throws DoubleReceiveException If already called [receive].
      */
-    public open suspend fun receive(info: TypeInfo): Any {
+    public suspend fun receive(info: TypeInfo): Any {
         try {
             if (response.instanceOf(info.type)) return response
-            if (!received.compareAndSet(false, true)) throw DoubleReceiveException(this)
+            if (!allowDoubleReceive && !received.compareAndSet(false, true))
+                throw DoubleReceiveException(this)
 
             val responseData = attributes.getOrNull(CustomResponse) ?: response.content
 

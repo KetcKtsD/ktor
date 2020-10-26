@@ -34,21 +34,7 @@ internal class SavedHttpCall(client: HttpClient) : HttpClientCall(client) {
         return ByteReadChannel(contentBytes)
     }
 
-    // Allows multiple calls
-    override suspend fun receive(info: TypeInfo): Any {
-        try {
-            if (response.instanceOf(info.type)) return response
-
-            val responseData = attributes.getOrNull(CustomResponse) ?: copyContent()
-
-            return receiveFromData(info, responseData)
-        } catch (cause: Throwable) {
-            response.cancel("Receive failed", cause)
-            throw cause
-        } finally {
-            response.complete()
-        }
-    }
+    override val allowDoubleReceive: Boolean = true
 }
 
 internal class SavedHttpRequest(
